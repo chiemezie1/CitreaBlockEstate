@@ -12,7 +12,7 @@ import { MapPin, DollarSign, ThumbsUp, User } from 'lucide-react'
 import { formatToCBTC } from '@/utils/formatHelpers';
 
 type GetAllPropertiesFunction = (start: bigint, end: bigint) => Promise<bigint[]>;
-type GetPropertyInfoFunction = (id: bigint) => Promise<[string, string, string, string, bigint, 'none' | 'forSale' | 'forRent', boolean, string[], number, string, bigint, string]>;
+type GetPropertyInfoFunction = (id: bigint) => Promise<[string, string, string, string, bigint, bigint, boolean, string[], number, string, bigint, string]>;
 
 const typedGetAllProperties = getAllProperties as GetAllPropertiesFunction;
 const typedGetPropertyInfo = getPropertyInfo as GetPropertyInfoFunction;
@@ -40,7 +40,7 @@ export default function FeaturedProperties() {
         description: result[2],
         imageUrl: result[3],
         price: result[4],
-        status: result[5],
+        status: result[5] as bigint,
         isVerified: result[6],
         reviewCount: Number(result[7]),
         currentTenant: result[8],
@@ -121,9 +121,9 @@ export default function FeaturedProperties() {
                     />
                     <Badge
                       className="absolute top-4 right-4"
-                      variant={property.status === 'forSale' ? 'default' : 'secondary'}
+                      variant={property.status === BigInt(1) ? 'default' : 'secondary'}
                     >
-                      {property.status === 'forSale' ? 'For Sale' : property.status === 'forRent' ? 'For Rent' : 'Not Available'}
+                      {property.status === BigInt(1) ? 'For Sale' : property.status === BigInt(2) ? 'For Rent' : 'Not Available'}
                     </Badge>
                   </div>
                 </CardHeader>
