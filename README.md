@@ -88,8 +88,8 @@ CitreaBlockEstate leverages the Citrea blockchain, offering:
 ## 🚀 Getting Started
 
 For detailed setup and running instructions:
-- Frontend: Refer to the [Frontend README](./frontend/README.md)
-- Backend: Refer to the [Backend README](./backend/README.md)
+- Frontend: Refer to the [Frontend README](https://github.com/chiemezie1/CitreaBlockEstate/blob/main/real-estate-frontend/README.md)
+- Backend: Refer to the [Backend README](https://github.com/chiemezie1/CitreaBlockEstate/blob/main/RealEstateContract/README.md)
 
 ## 🔗 Resources
 
