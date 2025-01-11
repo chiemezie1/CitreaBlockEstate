@@ -15,7 +15,7 @@ import ReviewsCard from '@/components/property/ReviewsCard'
 
 
 // Define the types for the contract interaction functions
-type GetPropertyInfoFunction = (id: bigint) => Promise<[string, string, string, string, bigint, 'none' | 'forSale' | 'forRent', boolean, bigint, string, bigint, string]>;
+type GetPropertyInfoFunction = (id: bigint) => Promise<[string, string, string, string, bigint, bigint, boolean, bigint, string, bigint, string]>;
 type GetPropertyReviewIdsFunction = (propertyId: bigint) => Promise<bigint[]>;
 type GetReviewDetailsFunction = (reviewId: bigint) => Promise<[bigint, bigint, string, string, bigint]>;
 
@@ -42,7 +42,7 @@ export default function PropertyDetailsPage() {
           description: details[2],
           imageUrl: details[3],
           price: details[4],
-          status: details[5], // 0: none, 1: forSale, 2: forRent
+          status: details[5] as bigint,
           isVerified: details[6],
           reviewIds: [],
           likeCount: Number(details[7]),
