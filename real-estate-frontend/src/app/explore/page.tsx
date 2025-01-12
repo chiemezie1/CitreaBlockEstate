@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getAllProperties, getPropertyInfo } from '@/utils/contractInteractions'
 import { Property } from '@/utils/types'
@@ -32,7 +31,6 @@ export default function ExplorePage() {
   })
   const [showSidebar, setShowSidebar] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const router = useRouter()
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -184,10 +182,7 @@ export default function ExplorePage() {
                 />
               </div>
             </div>
-            <PropertyGrid
-              properties={paginatedProperties}
-              onPropertyClick={(property) => router.push(`/property/${property.id}`)}
-            />
+            <PropertyGrid properties={paginatedProperties} />
           </div>
         </div>
       </div>

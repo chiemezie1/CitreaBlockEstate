@@ -4,10 +4,9 @@ import { motion } from 'framer-motion'
 
 interface PropertyGridProps {
   properties: Property[]
-  onPropertyClick?: (property: Property) => void
 }
 
-const PropertyGrid: React.FC<PropertyGridProps> = ({ properties, onPropertyClick }) => {
+const PropertyGrid: React.FC<PropertyGridProps> = ({ properties }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {properties.map((property, index) => (
@@ -17,7 +16,6 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({ properties, onPropertyClick
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
           className="w-full"
-          onClick={() => onPropertyClick && onPropertyClick(property)}
         >
           <ExplorePropertyCard property={property} />
         </motion.div>

@@ -1,16 +1,30 @@
 import { useState } from 'react'
+import { cBTCToSatoshi, formatToCBTC } from '@/utils/formatHelpers'
 
 interface UpdateStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (status: bigint, price: bigint, rentalEndDate: bigint) => void;
   currentStatus: bigint;
+  currentPrice: bigint;
+  currentRentalEndDate: bigint;
 }
 
-export function UpdateStatusModal({ isOpen, onClose, onUpdate, currentStatus }: UpdateStatusModalProps) {
+export function UpdateStatusModal({ 
+  isOpen, 
+  onClose, 
+  onUpdate, 
+  currentStatus, 
+  currentPrice, 
+  currentRentalEndDate 
+}: UpdateStatusModalProps) {
   const [newStatus, setNewStatus] = useState<bigint>(currentStatus)
-  const [price, setPrice] = useState<string>('')
-  const [rentalEndDate, setRentalEndDate] = useState<string>('')
+  const [price, setPrice] = useState<string>(formatToCBTC(currentPrice))
+  const [rentalEndDate, setRentalEndDate] = useState<string>(
+    currentRentalEndDate > BigInt(0) 
+      ? new Date(Number(currentRentalEndDate) * 1000).toISOString().split('T')[0]
+      : ''
+  )
 
   const handleUpdate = () => {
     const endDate = newStatus === BigInt(2) && rentalEndDate 
@@ -19,8 +33,7 @@ export function UpdateStatusModal({ isOpen, onClose, onUpdate, currentStatus }: 
     
     let bigIntPrice: bigint;
     try {
-      // Convert the price to cBTC (smallest unit of cBTC, similar to Satoshis in BTC)
-      bigIntPrice = BigInt(Math.floor(parseFloat(price) * 1e8)); // 1e8 = 100,000,000 for cBTC precision
+      bigIntPrice = cBTCToSatoshi(price);
     } catch (error) {
       console.error('Error converting price to BigInt:', error);
       bigIntPrice = BigInt(0);
@@ -54,7 +67,7 @@ export function UpdateStatusModal({ isOpen, onClose, onUpdate, currentStatus }: 
             <input
               id="price"
               type="number"
-              step="0.00000001" // Allow the smallest unit of cBTC
+              step="0.00000001"
               placeholder="Price in cBTC"
               value={price}
               onChange={(e) => setPrice(e.target.value)}

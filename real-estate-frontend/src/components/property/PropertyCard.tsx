@@ -110,7 +110,7 @@ export default function PropertyCard({ property, setProperty }: PropertyCardProp
       );
     }
 
-    switch (property.status) {
+    switch (BigInt(property.status)) {
       case BigInt(1): // forSale
         return (
           <Button onClick={handleBuyProperty} disabled={isLoading} className="w-full bg-green-600 hover:bg-green-700">
@@ -147,7 +147,7 @@ export default function PropertyCard({ property, setProperty }: PropertyCardProp
 
             <div className="absolute top-4 left-4 flex items-center space-x-2">
               <div className="text-sm font-medium bg-blue-500/80 px-4 py-2 rounded-full">
-                {property.status === BigInt(1)? 'For Sale' : property.status === BigInt(2) ? 'For Rent' : 'Not Available'}
+                {BigInt(property.status) === BigInt(1)? 'For Sale' : BigInt(property.status) === BigInt(2) ? 'For Rent' : 'Not Available'}
               </div>
               {property.isVerified && (
                 <div className="bg-green-500/80 p-2 rounded-full">
@@ -195,7 +195,7 @@ function PropertyDetails({ property }: { property: Property }) {
         color="text-green-400"
         text={`${formatToCBTC(property.price)} cBTC`}
       />
-      {property.status === BigInt(2) && (
+      {BigInt(property.status) === BigInt(2) && (
         <>
           <DetailItem
             icon={User}

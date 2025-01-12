@@ -1,175 +1,197 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Property } from '@/utils/types';
-import Image from 'next/image';
-import { Heart, Verified, MapPin, DollarSign, User, Calendar, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
-import { toggleLike, getPropertyInfo, buyProperty, rentProperty, getCurrentAccount } from '@/utils/contractInteractions';
-import { formatToCBTC } from '@/utils/formatHelpers';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { Heart, Verified, MapPin, DollarSign, User, Calendar, Home, ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { toast } from '@/hooks/use-toast'
+import { toggleLike, getPropertyInfo, buyProperty, rentProperty, getCurrentAccount } from '@/utils/contractInteractions'
+import { formatToCBTC } from '@/utils/formatHelpers'
+import { Property } from '@/utils/types'
 
 interface PropertyCardProps {
-  property: Property;
+  property: Property
 }
 
 export default function ExplorePropertyCard({ property }: PropertyCardProps) {
-  const [isLiking, setIsLiking] = useState(false);
-  const [ownerAddress, setOwnerAddress] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [localProperty, setLocalProperty] = useState(property);
+  const router = useRouter()
+  const [isLiking, setIsLiking] = useState(false)
+  const [ownerAddress, setOwnerAddress] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [localProperty, setLocalProperty] = useState(property)
 
   useEffect(() => {
     const fetchCurrentAccount = async () => {
-      const currentAccount = await getCurrentAccount();
-      setOwnerAddress(currentAccount);
-    };
-    fetchCurrentAccount();
-  }, []);
+      const currentAccount = await getCurrentAccount()
+      setOwnerAddress(currentAccount)
+    }
+    fetchCurrentAccount()
+  }, [])
 
   const handleToggleLike = async () => {
-    if (isLiking) return;
-    setIsLiking(true);
+    if (isLiking) return
+    setIsLiking(true)
     try {
-      await toggleLike(BigInt(localProperty.id));
-      const updatedProperty = await getPropertyInfo(BigInt(localProperty.id));
+      await toggleLike(BigInt(localProperty.id))
+      const updatedProperty = await getPropertyInfo(BigInt(localProperty.id))
       if (Array.isArray(updatedProperty) && updatedProperty.length > 7) {
-        setLocalProperty((prev) => ({ ...prev, likeCount: Number(updatedProperty[7]) }));
+        setLocalProperty((prev) => ({ ...prev, likeCount: Number(updatedProperty[7]) }))
       }
       toast({
         title: 'Success',
         description: 'Property like status updated.',
-      });
+      })
     } catch (error) {
-      console.error('Error toggling like:', error);
+      console.error('Error toggling like:', error)
       toast({
         title: 'Error',
         description: 'Failed to update like status. Please try again.',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setIsLiking(false);
+      setIsLiking(false)
     }
-  };
+  }
 
   const handleBuyProperty = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      await buyProperty(BigInt(localProperty.id), localProperty.price);
+      await buyProperty(BigInt(localProperty.id), localProperty.price)
       toast({
         title: 'Success',
         description: 'Property purchased successfully.',
-      });
-      const updatedProperty = await getPropertyInfo(BigInt(localProperty.id));
-      setLocalProperty(updatedProperty as Property);
+      })
+      const updatedProperty = await getPropertyInfo(BigInt(localProperty.id))
+      setLocalProperty(updatedProperty as Property)
     } catch (error) {
-      console.error('Error buying property:', error);
+      console.error('Error buying property:', error)
       toast({
         title: 'Error',
         description: 'Failed to purchase property. Please try again.',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleRentProperty = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      await rentProperty(BigInt(localProperty.id), localProperty.price);
+      await rentProperty(BigInt(localProperty.id), localProperty.price)
       toast({
         title: 'Success',
         description: 'Property rented successfully.',
-      });
-      const updatedProperty = await getPropertyInfo(BigInt(localProperty.id));
-      setLocalProperty(updatedProperty as Property);
+      })
+      const updatedProperty = await getPropertyInfo(BigInt(localProperty.id))
+      setLocalProperty(updatedProperty as Property)
     } catch (error) {
-      console.error('Error renting property:', error);
+      console.error('Error renting property:', error)
       toast({
         title: 'Error',
         description: 'Failed to rent property. Please try again.',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  const renderActionButton = () => {
+  const renderActionButtons = () => {
+    const buttons = []
+
     if (ownerAddress.toLowerCase() === localProperty.owner.toLowerCase()) {
-      return (
-        <Button disabled className="w-full bg-gray-600 text-gray-300">
+      buttons.push(
+        <div key="owner-message" className="w-full bg-gray-600 text-gray-300 p-2 rounded text-center">
           You own this property
-        </Button>
-      );
+        </div>
+      )
+    } else {
+      switch (BigInt(localProperty.status)) {
+        case BigInt(1): // forSale
+          buttons.push(
+            <Button
+              key="buy"
+              onClick={handleBuyProperty}
+              disabled={isLoading}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isLoading ? 'Processing...' : 'Buy Now'}
+            </Button>
+          )
+          break
+        case BigInt(2): // forRent
+          buttons.push(
+            <Button
+              key="rent"
+              onClick={handleRentProperty}
+              disabled={isLoading}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              {isLoading ? 'Processing...' : 'Rent Now'}
+            </Button>
+          )
+          break
+      }
     }
 
-    switch (localProperty.status) {
-      case BigInt(1): // forSale
-        return (
-          <Button onClick={handleBuyProperty} disabled={isLoading} className="w-full bg-green-600 hover:bg-green-700">
-            {isLoading ? 'Processing...' : 'Buy Property'}
-          </Button>
-        );
-      case BigInt(2): // forRent
-        return (
-          <Button onClick={handleRentProperty} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700">
-            {isLoading ? 'Processing...' : 'Rent Property'}
-          </Button>
-        );
-      default:
-        return (
-          <Button disabled className="w-full bg-gray-600 text-gray-300">
-            Not available
-          </Button>
-        );
-    }
-  };
+    // See Details button
+    buttons.push(
+      <Button
+        key="details"
+        onClick={() => router.push(`/property/${property.id}`)}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+      >
+        See Details
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    )
+
+    return buttons
+  }
 
   return (
-    <Card className="bg-gray-800/90 border-gray-700 text-gray-200 backdrop-blur-md shadow-xl overflow-hidden">
+    <Card className="bg-gray-800/90 border-gray-700 text-gray-200 backdrop-blur-md shadow-xl overflow-hidden max-w-sm mx-auto">
       <CardContent className="p-0">
-        <div className="grid md:grid-cols-2">
-          <div className="relative">
+        <div className="flex flex-col">
+          <div className="relative h-48">
             <Image
               src={`https://gateway.pinata.cloud/ipfs/${localProperty.imageUrl}`}
               alt={localProperty.name || 'Property Image'}
-              width={600}
-              height={400}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              fill
+              className="object-cover"
               onError={(e) => (e.currentTarget.src = '/placeholder.svg')}
             />
-
             <div className="absolute top-4 left-4 flex items-center space-x-2">
-              <div className="text-sm font-medium bg-blue-500/80 px-4 py-2 rounded-full">
+              <div className="text-sm font-medium bg-blue-500/80 px-3 py-1 rounded-full">
                 {BigInt(localProperty.status) === BigInt(1) ? 'For Sale' : BigInt(localProperty.status) === BigInt(2) ? 'For Rent' : 'Not Available'}
               </div>
               {localProperty.isVerified && (
-                <div className="bg-green-500/80 p-2 rounded-full">
-                  <Verified className="h-5 w-5 text-white" />
+                <div className="bg-green-500/80 p-1.5 rounded-full">
+                  <Verified className="h-4 w-4 text-white" />
                 </div>
               )}
             </div>
           </div>
-          <div className="p-6 space-y-4">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+          <div className="p-4 space-y-3">
+            <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
               {localProperty.name}
             </h1>
             <PropertyDetails property={localProperty} />
-            <p className="text-gray-300 leading-relaxed">{localProperty.description}</p>
-            <div className="space-y-2">
-              {renderActionButton()}
+            <p className="text-gray-300 text-sm leading-relaxed line-clamp-2">{localProperty.description}</p>
+            <div className="grid grid-cols-1 gap-2 pt-2">
+              {renderActionButtons()}
               <Button
                 onClick={handleToggleLike}
                 variant="outline"
-                size="lg"
+                size="sm"
                 className="w-full bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 transition-colors duration-300"
                 disabled={isLiking}
               >
                 <Heart
-                  className={`h-5 w-5 mr-2 ${
+                  className={`h-4 w-4 mr-2 ${
                     (localProperty.likeCount ?? 0) > 0 ? 'text-red-500 fill-red-500' : 'text-gray-400'
                   }`}
                 />
@@ -180,12 +202,12 @@ export default function ExplorePropertyCard({ property }: PropertyCardProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function PropertyDetails({ property }: { property: Property }) {
   return (
-    <div className="grid grid-cols-2 gap-2 text-sm">
+    <div className="grid grid-cols-2 gap-1.5 text-xs">
       <DetailItem icon={MapPin} color="text-blue-400" text={property.location} />
       <DetailItem
         icon={DollarSign}
@@ -216,11 +238,11 @@ function PropertyDetails({ property }: { property: Property }) {
           color="text-blue-400"
           text={`${property.owner.slice(0, 6)}...${property.owner.slice(-4)}`}
           label="Owner"
-          className="bg-gray-700/50 p-2 rounded-lg transition-colors duration-300 hover:bg-gray-600/50"
+          className="bg-gray-700/50 p-1.5 rounded-lg transition-colors duration-300 hover:bg-gray-600/50"
         />
       </div>
     </div>
-  );
+  )
 }
 
 function DetailItem({
@@ -230,22 +252,22 @@ function DetailItem({
   label,
   className,
 }: {
-  icon: any;
-  color: string;
-  text: string;
-  label?: string;
-  className?: string;
+  icon: any
+  color: string
+  text: string
+  label?: string
+  className?: string
 }) {
   return (
     <div
-      className={`flex items-center space-x-2 bg-gray-700/50 p-2 rounded-lg transition-colors duration-300 hover:bg-gray-600/50 ${className}`}
+      className={`flex items-center space-x-2 bg-gray-700/50 p-1.5 rounded-lg transition-colors duration-300 hover:bg-gray-600/50 ${className}`}
     >
-      <Icon className={`${color} h-4 w-4`} />
+      <Icon className={`${color} h-3.5 w-3.5`} />
       <div>
-        {label && <span className="font-medium text-sm block">{label}</span>}
-        <span className="font-medium break-all text-xs">{text}</span>
+        {label && <span className="font-medium text-xs block text-gray-400">{label}</span>}
+        <span className="font-medium truncate block text-xs">{text}</span>
       </div>
     </div>
-  );
+  )
 }
 
