@@ -7,11 +7,12 @@ Welcome to the frontend of CitreaBlockEstate, a cutting-edge decentralized appli
 ## 🚀 Key Features
 
 - 🏠 Interactive Property Listings: Browse, filter, and search tokenized properties
-- 💰 Seamless Transactions: Buy, sell, and rent properties with ease
+- 💰 Seamless Transactions: Buy, sell, and rent properties with ease (Only verified properties are eligible for sale or rent)
 - 👤 User Dashboard: Manage owned properties, transactions, and account settings
 - 🔐 Web3 Integration: Connect with MetaMask and other popular wallets
 - 🖼️ Rich Media Support: View high-quality images
 - 📱 Responsive Design: Optimized for desktop, tablet, and mobile devices
+- ✅ Property Verification: Properties must first be verified by an admin or verifier before they can be rented out or sold
 
 
 ## 🛠️ Tech Stack
