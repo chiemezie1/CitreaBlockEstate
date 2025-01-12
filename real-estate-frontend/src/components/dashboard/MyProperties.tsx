@@ -276,12 +276,13 @@ export default function MyProperties() {
           </div>
         </div>
       )}
-
       <UpdateStatusModal
         isOpen={statusDialogOpen}
         onClose={() => setStatusDialogOpen(false)}
         onUpdate={handleUpdateStatus}
-        currentStatus={selectedProperty?.status || BigInt(0)}
+        currentStatus={selectedProperty?.status ?? BigInt(0)}
+        currentPrice={selectedProperty?.price ?? BigInt(0)}
+        currentRentalEndDate={selectedProperty?.rentalEndDate ?? BigInt(0)}
       />
     </div>
   )

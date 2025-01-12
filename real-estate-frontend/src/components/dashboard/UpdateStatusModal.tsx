@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { cBTCToSatoshi, formatToCBTC } from '@/utils/formatHelpers'
 
-interface UpdateStatusModalProps {
+
+type UpdateStatusModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (status: bigint, price: bigint, rentalEndDate: bigint) => void;
+  onUpdate: (status: bigint, price: bigint, rentalEndDate: bigint) => Promise<void>;
   currentStatus: bigint;
   currentPrice: bigint;
   currentRentalEndDate: bigint;
-}
+};
 
 export function UpdateStatusModal({ 
   isOpen, 
