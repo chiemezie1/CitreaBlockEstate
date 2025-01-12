@@ -37,6 +37,13 @@ CitreaBlockEstate is a groundbreaking decentralized application (DApp) that toke
 - Responsive web interface for seamless user experience
 - Role-based dashboard for efficient property and user management
 
+## 🎥 Video Demo
+
+Check out the video demo of the CitreaBlockEstate frontend in action:
+
+[Watch the Demo](https://youtu.be/ARhNkHb1Hew)
+
+
 ## 🛠 Tech Stack
 
 ### Frontend
