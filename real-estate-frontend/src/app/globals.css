@@ -82,16 +82,16 @@
   
   /* Add this new rule for the zoom effect */
   html {
-    zoom: 90%;
+    zoom: 95%;
   }
   
   /* For browsers that don't support zoom */
-  @supports not (zoom: 90%) {
+  @supports not (zoom: 95%) {
     html {
-      -webkit-transform: scale(0.9);
-      -moz-transform: scale(0.9);
-      -ms-transform: scale(0.9);
-      transform: scale(0.9);
+      -webkit-transform: scale(0.95);
+      -moz-transform: scale(0.95);
+      -ms-transform: scale(0.95);
+      transform: scale(0.95);
       transform-origin: 0 0;
     }
   }
