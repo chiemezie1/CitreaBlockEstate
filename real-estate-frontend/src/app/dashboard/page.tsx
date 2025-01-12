@@ -21,22 +21,27 @@ export default function Dashboard() {
 
   async function checkConnection() {
     try {
-      const client = await getWalletClient()
-      const [account] = await client.getAddresses()
+      const client = await getWalletClient();
+      if (!client) {
+        throw new Error('Wallet client is null or undefined');
+      }
+
+      const [account] = await client.getAddresses();
       if (account) {
-        setIsConnected(true)
-        const role = await hasRole()
-        setUserRole(role as 'ADMIN' | 'VERIFIER' | 'USER')
+        setIsConnected(true);
+        const role = await hasRole();
+        setUserRole(role as 'ADMIN' | 'VERIFIER' | 'USER');
       } else {
-        setIsConnected(false)
-        setUserRole(null)
+        setIsConnected(false);
+        setUserRole(null);
       }
     } catch (error) {
-      console.error('Failed to check wallet connection:', error)
-      setIsConnected(false)
-      setUserRole(null)
+      console.error('Failed to check wallet connection:', error);
+      setIsConnected(false);
+      setUserRole(null);
     }
   }
+
 
   const renderContent = () => {
     switch (activeView) {

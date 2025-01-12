@@ -18,7 +18,7 @@ interface PropertyCardProps {
 export default function ExplorePropertyCard({ property }: PropertyCardProps) {
   const router = useRouter()
   const [isLiking, setIsLiking] = useState(false)
-  const [ownerAddress, setOwnerAddress] = useState('')
+  const [ownerAddress, setOwnerAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false)
   const [localProperty, setLocalProperty] = useState(property)
 
@@ -102,7 +102,7 @@ export default function ExplorePropertyCard({ property }: PropertyCardProps) {
   const renderActionButtons = () => {
     const buttons = []
 
-    if (ownerAddress.toLowerCase() === localProperty.owner.toLowerCase()) {
+    if (ownerAddress && localProperty.owner && ownerAddress.toLowerCase() === localProperty.owner.toLowerCase()) {
       buttons.push(
         <div key="owner-message" className="w-full bg-gray-600 text-gray-300 p-2 rounded text-center">
           You own this property

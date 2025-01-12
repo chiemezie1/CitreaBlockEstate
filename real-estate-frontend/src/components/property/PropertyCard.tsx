@@ -17,7 +17,7 @@ interface PropertyCardProps {
 
 export default function PropertyCard({ property, setProperty }: PropertyCardProps) {
   const [isLiking, setIsLiking] = useState(false);
-  const [ownerAddress, setOwnerAddress] = useState('');
+  const [ownerAddress, setOwnerAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function PropertyCard({ property, setProperty }: PropertyCardProp
   };
 
   const renderActionButton = () => {
-    if (ownerAddress.toLowerCase() === property.owner.toLowerCase()) {
+    if (ownerAddress && property.owner && ownerAddress.toLowerCase() === property.owner.toLowerCase()) {
       return (
         <Button disabled className="w-full bg-gray-600 text-gray-300">
           You own this property
