@@ -5,27 +5,53 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Wallet, ChevronDown } from 'lucide-react'
 import Logo from './Logo'
-import { publicClient, getWalletClient } from '@/utils/contractInteractions'
-import { formatEther } from 'viem'
+import { publicClient } from '@/utils/contractInteractions'
+import { formatEther, createWalletClient, custom } from 'viem'
+import { citrea } from '@/utils/citreaChain'
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [balance, setBalance] = useState<string | null>(null)
-  const [chainName, setChainName] = useState<string | null>(null)
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
 
   useEffect(() => {
-    const savedWalletAddress = localStorage.getItem('walletAddress')
-    const savedBalance = localStorage.getItem('balance')
-    const savedChainName = localStorage.getItem('chainName')
-
-    if (savedWalletAddress && savedBalance && savedChainName) {
-      setWalletAddress(savedWalletAddress)
-      setBalance(savedBalance)
-      setChainName(savedChainName)
+    const checkWalletConnection = async () => {
+      if (typeof window !== 'undefined' && window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+          if (accounts.length > 0) {
+            await connectWallet()
+          }
+        } catch (error) {
+          console.error('Failed to check wallet connection:', error)
+        }
+      }
     }
-  }, [])
+
+    checkWalletConnection()
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length === 0) {
+        // MetaMask is locked or the user has not connected any accounts
+        setWalletAddress(null)
+        setBalance(null)
+      } else if (accounts[0] !== walletAddress) {
+        connectWallet()
+      }
+    }
+
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', handleAccountsChanged)
+    }
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged)
+      }
+    }
+  }, [walletAddress])
 
   const connectWallet = async () => {
     if (typeof window === 'undefined' || !window.ethereum) {
@@ -33,60 +59,60 @@ const Header: React.FC = () => {
       return
     }
 
+    setIsConnecting(true)
+
     try {
-      const walletClient = await getWalletClient()
+      const walletClient = createWalletClient({
+        chain: citrea,
+        transport: custom(window.ethereum)
+      })
+
+      // Request account access
+      await window.ethereum.request({ method: 'eth_requestAccounts' })
+
       const [address] = await walletClient.getAddresses()
+      if (!address) {
+        throw new Error('No addresses found')
+      }
+
       setWalletAddress(address)
 
-      const network = await walletClient.getChainId()
+      const chainId = await walletClient.getChainId()
 
-      if (network !== 5115) {
+      if (chainId !== citrea.id) {
         try {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [
-              {
-                chainId: '0x13FB',
-                chainName: 'Citrea Testnet',
-                nativeCurrency: {
-                  name: 'Citrea Bitcoin',
-                  symbol: 'cBTC',
-                  decimals: 18,
-                },
-                rpcUrls: ['https://rpc.testnet.citrea.xyz'],
-                blockExplorerUrls: ['https://explorer.testnet.citrea.xyz'],
-              },
-            ],
-          })
-        } catch (error) {
-          console.error('Failed to switch to Citrea Testnet:', error)
-          alert('Please manually add the Citrea Testnet to MetaMask.')
-          return
+          await walletClient.switchChain({ id: citrea.id })
+        } catch (switchError: any) {
+          // This error code indicates that the chain has not been added to MetaMask
+          if (switchError.code === 4902) {
+            try {
+              await walletClient.addChain({ chain: citrea })
+            } catch (addError) {
+              console.error('Failed to add Citrea Testnet:', addError)
+              alert('Please manually add the Citrea Testnet to MetaMask.')
+              return
+            }
+          } else {
+            throw switchError
+          }
         }
       }
 
       const balance = await publicClient.getBalance({ address })
       setBalance(formatEther(balance))
 
-      setChainName('Citrea Testnet')
-
-      localStorage.setItem('walletAddress', address)
-      localStorage.setItem('balance', formatEther(balance))
-      localStorage.setItem('chainName', 'Citrea Testnet')
     } catch (error) {
       console.error('Failed to connect wallet:', error)
+      alert('Failed to connect wallet. Please make sure your MetaMask is unlocked and try again.')
+    } finally {
+      setIsConnecting(false)
     }
   }
 
   const disconnectWallet = () => {
     setWalletAddress(null)
     setBalance(null)
-    setChainName(null)
     setIsWalletMenuOpen(false)
-
-    localStorage.removeItem('walletAddress')
-    localStorage.removeItem('balance')
-    localStorage.removeItem('chainName')
   }
 
   return (
@@ -116,7 +142,7 @@ const Header: React.FC = () => {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10">
                     <div className="px-4 py-2 text-sm text-gray-700">
                       <p>Balance: {balance ? `${parseFloat(balance).toFixed(4)} cBTC` : 'Loading...'}</p>
-                      <p>Network: {chainName || 'Loading...'}</p>
+                      <p>Network: Citrea Testnet</p>
                     </div>
                     <button
                       onClick={disconnectWallet}
@@ -130,10 +156,11 @@ const Header: React.FC = () => {
             ) : (
               <button
                 onClick={connectWallet}
-                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-2 rounded-full hover:from-purple-600 hover:to-blue-600 transition duration-300 shadow-md flex items-center space-x-2"
+                disabled={isConnecting}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-2 rounded-full hover:from-purple-600 hover:to-blue-600 transition duration-300 shadow-md flex items-center space-x-2 disabled:opacity-50"
               >
                 <Wallet size={20} />
-                <span>Connect Wallet</span>
+                <span>{isConnecting ? 'Connecting...' : 'Connect Wallet'}</span>
               </button>
             )}
           </div>
@@ -166,7 +193,7 @@ const Header: React.FC = () => {
                       Balance: {balance ? `${parseFloat(balance).toFixed(4)} cBTC` : 'Loading...'}
                     </p>
                     <p className="text-sm text-gray-600 mb-2">
-                      Network: {chainName || 'Loading...'}
+                      Network: Citrea Testnet
                     </p>
                     <button
                       onClick={disconnectWallet}
@@ -178,10 +205,11 @@ const Header: React.FC = () => {
                 ) : (
                   <button
                     onClick={connectWallet}
-                    className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full hover:from-purple-600 hover:to-blue-600 transition duration-300 shadow-md flex items-center justify-center space-x-2"
+                    disabled={isConnecting}
+                    className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full hover:from-purple-600 hover:to-blue-600 transition duration-300 shadow-md flex items-center justify-center space-x-2 disabled:opacity-50"
                   >
                     <Wallet size={20} />
-                    <span>Connect Wallet</span>
+                    <span>{isConnecting ? 'Connecting...' : 'Connect Wallet'}</span>
                   </button>
                 )}
               </div>

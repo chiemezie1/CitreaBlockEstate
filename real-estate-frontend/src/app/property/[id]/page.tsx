@@ -13,7 +13,6 @@ import PropertyCard from '@/components/property/PropertyCard'
 import ReviewsCard from '@/components/property/ReviewsCard'
 
 
-
 // Define the types for the contract interaction functions
 type GetPropertyInfoFunction = (id: bigint) => Promise<[string, string, string, string, bigint, bigint, boolean, bigint, string, bigint, string]>;
 type GetPropertyReviewIdsFunction = (propertyId: bigint) => Promise<bigint[]>;
