@@ -20,9 +20,14 @@ const Header: React.FC = () => {
     const checkWalletConnection = async () => {
       if (typeof window !== 'undefined' && window.ethereum) {
         try {
-          const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-          if (accounts.length > 0) {
-            await connectWallet()
+          const sessionWalletAddress = sessionStorage.getItem('walletAddress')
+          if (sessionWalletAddress) {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+            if (accounts.length > 0 && accounts[0].toLowerCase() === sessionWalletAddress.toLowerCase()) {
+              await connectWallet(true)
+            } else {
+              sessionStorage.removeItem('walletAddress')
+            }
           }
         } catch (error) {
           console.error('Failed to check wallet connection:', error)
@@ -34,9 +39,7 @@ const Header: React.FC = () => {
 
     const handleAccountsChanged = (accounts: string[]) => {
       if (accounts.length === 0) {
-        // MetaMask is locked or the user has not connected any accounts
-        setWalletAddress(null)
-        setBalance(null)
+        disconnectWallet()
       } else if (accounts[0] !== walletAddress) {
         connectWallet()
       }
@@ -53,7 +56,7 @@ const Header: React.FC = () => {
     }
   }, [walletAddress])
 
-  const connectWallet = async () => {
+  const connectWallet = async (isReconnecting = false) => {
     if (typeof window === 'undefined' || !window.ethereum) {
       alert('MetaMask is not installed. Please install it to use this feature.')
       return
@@ -67,15 +70,20 @@ const Header: React.FC = () => {
         transport: custom(window.ethereum)
       })
 
-      // Request account access
-      await window.ethereum.request({ method: 'eth_requestAccounts' })
-
-      const [address] = await walletClient.getAddresses()
-      if (!address) {
-        throw new Error('No addresses found')
+      let accounts
+      if (!isReconnecting) {
+        accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      } else {
+        accounts = await window.ethereum.request({ method: 'eth_accounts' })
       }
 
+      if (accounts.length === 0) {
+        throw new Error('No accounts found')
+      }
+
+      const address = accounts[0]
       setWalletAddress(address)
+      sessionStorage.setItem('walletAddress', address)
 
       const chainId = await walletClient.getChainId()
 
@@ -83,7 +91,6 @@ const Header: React.FC = () => {
         try {
           await walletClient.switchChain({ id: citrea.id })
         } catch (switchError: any) {
-          // This error code indicates that the chain has not been added to MetaMask
           if (switchError.code === 4902) {
             try {
               await walletClient.addChain({ chain: citrea })
@@ -113,6 +120,7 @@ const Header: React.FC = () => {
     setWalletAddress(null)
     setBalance(null)
     setIsWalletMenuOpen(false)
+    sessionStorage.removeItem('walletAddress')
   }
 
   return (
@@ -155,7 +163,7 @@ const Header: React.FC = () => {
               </div>
             ) : (
               <button
-                onClick={connectWallet}
+                onClick={() => connectWallet()}
                 disabled={isConnecting}
                 className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-2 rounded-full hover:from-purple-600 hover:to-blue-600 transition duration-300 shadow-md flex items-center space-x-2 disabled:opacity-50"
               >
@@ -204,7 +212,7 @@ const Header: React.FC = () => {
                   </div>
                 ) : (
                   <button
-                    onClick={connectWallet}
+                    onClick={() => connectWallet()}
                     disabled={isConnecting}
                     className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full hover:from-purple-600 hover:to-blue-600 transition duration-300 shadow-md flex items-center justify-center space-x-2 disabled:opacity-50"
                   >
